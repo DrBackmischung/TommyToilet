@@ -22,6 +22,7 @@ function App() {
   };
 
   const excretionTimesToday = getStatusValue('excretion_times_day');
+  const excretionTimeToday = getStatusValue('excretion_time_day');
   const catWeight = getStatusValue('cat_weight');
 
   const wasOnToilet = typeof excretionTimesToday === 'number' && excretionTimesToday > 0;
@@ -41,13 +42,18 @@ function App() {
         padding: '2rem',
       }}
     >
-      <h1>War Tommy heute schon auf Klo?</h1>
       {error && <p style={{ color: 'red' }}>{error}</p>}
       {data ? (
         <>
+          <h1>War Tommy heute schon auf Klo?</h1>
           <h2>{wasOnToilet ? 'Ja 🚽' : 'Nein 😿'}</h2>
-
-          <h1>Wie schwer ist Tommy aktuell?</h1>
+          {wasOnToilet ? (
+            <>
+              <h1>Wie lange hat er gebraucht?</h1>
+              <h2>{excretionTimeToday} Sekunden</h2>
+            </>
+          ) : ( <></> )}
+          <h1>Wie schwer ist er aktuell?</h1>
           <h2>{catWeight ? `${catWeight} g 🐈` : 'Unbekannt'}</h2>
         </>
       ) : (
