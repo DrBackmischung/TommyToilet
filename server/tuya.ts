@@ -1,7 +1,6 @@
-// server/tuya.ts
 import { TuyaContext } from '@tuya/tuya-connector-nodejs';
 import dotenv from 'dotenv';
-import type { Connect, ViteDevServer } from 'vite';
+import type { Connect } from 'vite';
 
 dotenv.config();
 
@@ -18,20 +17,44 @@ const context = new TuyaContext({
 
 export function tuyaApiMiddleware(): Connect.NextHandleFunction {
   return async (req, res, next) => {
+    const deviceId = process.env.TUYA_DEVICE_ID!;
+    res.setHeader('Content-Type', 'application/json');
+
     if (req.url === '/api/device-detail') {
       try {
-        const result = await context.device.detail({
-          device_id: process.env.TUYA_DEVICE_ID!,
-        });
-
-        res.setHeader('Content-Type', 'application/json');
+        const result = await context.device.detail({ device_id: deviceId });
         res.end(JSON.stringify(result));
       } catch (err) {
         console.error(err);
         res.statusCode = 500;
-        res.end(JSON.stringify({ error: 'Tuya API call failed' }));
+        res.end(JSON.stringify({ error: 'Tuya API call failed (device detail)' }));
       }
-    } else {
+    }
+
+    else if (req.url === '/api/device-usage') {
+        try {
+          const functions = await context.request({
+            method: 'GET',
+            path: `/v1.0/expand/devices/${deviceId}/functions`
+          });
+  
+          const status = await context.request({
+            method: 'GET',
+            path: `/v1.0/devices/${deviceId}/status`
+          });
+  
+          res.end(JSON.stringify({
+            functions: functions.result,
+            status: status.result
+          }));
+        } catch (err) {
+          console.error(err);
+          res.statusCode = 500;
+          res.end(JSON.stringify({ error: 'Tuya API call failed (device usage)' }));
+        }
+      }  
+
+    else {
       next();
     }
   };
