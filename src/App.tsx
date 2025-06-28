@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 
 function App() {
   const [data, setData] = useState<any>(null);
@@ -59,6 +60,11 @@ function App() {
       ) : (
         <p>Lade Gerätedaten…</p>
       )}
+      <br></br><br></br>
+      <Link to="/impressum" style={{ marginTop: '3rem', textDecoration: 'underline', color: 'white' }}>
+        Impressum
+      </Link>
+
     </div>
   );
 };
