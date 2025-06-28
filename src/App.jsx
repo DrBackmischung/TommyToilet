@@ -1,0 +1,98 @@
+import { useState, useEffect } from 'react';
+
+function toHex(buffer) {
+  return Array.from(new Uint8Array(buffer))
+    .map(b => b.toString(16).padStart(2, '0'))
+    .join('')
+    .toUpperCase();
+}
+
+async function signString(str, secret) {
+  const enc = new TextEncoder();
+  const key = await crypto.subtle.importKey(
+    'raw',
+    enc.encode(secret),
+    { name: 'HMAC', hash: 'SHA-256' },
+    false,
+    ['sign']
+  );
+  const signature = await crypto.subtle.sign('HMAC', key, enc.encode(str));
+  return toHex(signature);
+}
+
+async function getToken() {
+  const t = Date.now().toString();
+  const sign = await signString(
+    window.TUYA_ACCESS_ID + t,
+    window.TUYA_ACCESS_SECRET
+  );
+  const headers = {
+    'client_id': window.TUYA_ACCESS_ID,
+    'sign': sign,
+    't': t,
+    'sign_method': 'HMAC-SHA256'
+  };
+  const url = `${window.TUYA_BASE_URL}/v1.0/token?grant_type=1`;
+  const res = await fetch(url, { headers });
+  const data = await res.json();
+  return data.result.access_token;
+}
+
+async function fetchLastUsage() {
+  const token = await getToken();
+  const t = Date.now().toString();
+  const sign = await signString(
+    window.TUYA_ACCESS_ID + token + t,
+    window.TUYA_ACCESS_SECRET
+  );
+  const headers = {
+    'client_id': window.TUYA_ACCESS_ID,
+    'access_token': token,
+    'sign': sign,
+    't': t,
+    'sign_method': 'HMAC-SHA256'
+  };
+  const url = `${window.TUYA_BASE_URL}/v1.0/devices/${window.TUYA_DEVICE_ID}/logs`;
+  const res = await fetch(url, { headers });
+  const data = await res.json();
+  const logs = data.result && data.result.logs ? data.result.logs : [];
+  return logs.length ? logs[0].event_time : null;
+}
+
+export default function App() {
+  const [loading, setLoading] = useState(true);
+  const [usedToday, setUsedToday] = useState(false);
+  const [lastUsage, setLastUsage] = useState(null);
+
+  useEffect(() => {
+    async function load() {
+      try {
+        const last = await fetchLastUsage();
+        setLastUsage(last);
+        if (last) {
+          setUsedToday(new Date(last).toDateString() === new Date().toDateString());
+        }
+      } catch (e) {
+        console.error(e);
+      } finally {
+        setLoading(false);
+      }
+    }
+    load();
+  }, []);
+
+  return (
+    <div>
+      <h1>Tommy Toilet</h1>
+      {loading ? (
+        <p>Loading...</p>
+      ) : (
+        <p>
+          <strong>Status:</strong>{' '}
+          {usedToday ? 'Tommy has been on the toilet today.' : 'Tommy has not been on the toilet today.'}
+        </p>
+      )}
+      {lastUsage && <p>Last usage: {new Date(lastUsage).toLocaleString()}</p>}
+    </div>
+  );
+}
