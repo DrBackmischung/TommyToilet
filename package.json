@@ -1,0 +1,17 @@
+{
+  "name": "tommytoilet",
+  "version": "1.0.0",
+  "description": "Checks whether my cat went to the toilet today",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "node build.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "dependencies": {
+    "dotenv": "^16.3.1"
+  }
+}
+
