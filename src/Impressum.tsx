@@ -28,6 +28,10 @@ export default function Impressum() {
       <Link to="/" style={{ marginTop: '2rem', textDecoration: 'underline', color: 'white' }}>
         ⬅ Zurück zur Startseite
       </Link>
+
+      <Link to="/datenschutz" style={{ marginTop: '2rem', textDecoration: 'underline', color: 'white' }}>
+        Datenschutzerklärung
+      </Link>
     </div>
   );
 }
